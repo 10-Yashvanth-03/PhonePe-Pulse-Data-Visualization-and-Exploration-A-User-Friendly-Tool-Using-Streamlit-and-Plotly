@@ -18,8 +18,9 @@ mycursor.execute('create database if not exists phonepe')
 mycursor.execute('use phonepe')
 
 
-#Setting up Streamlit page
-#set up page configuration for streamlit
+#Setting  Streamlit page
+
+#seting page configuration for streamlit
 icon=Image.open('E:\Education\Project\Phone Pe\PhonePe.png')
 st.set_page_config(page_title='PHONEPE PULSE',
                    page_icon=icon,
@@ -27,7 +28,7 @@ st.set_page_config(page_title='PHONEPE PULSE',
                    layout='wide')
                    
 
-#set up home page and optionmenu 
+#setting home page and optionmenu 
 with st.sidebar:
     selected = option_menu("Main-Menu",
                         options=["ABOUT", "HOME", "GEO VISUALIZATION","District Wise Bar-Chart","Top Charts"],
@@ -35,7 +36,7 @@ with st.sidebar:
                         orientation="vertical")
                         
 
-#setup the detail for the option 'ABOUT'
+#setting the details for the option 'ABOUT'
 if selected == "ABOUT":
     st.title(':violet[Phonepe] *_Pulse Data Visualization and Exploration: A User-Friendly Tool Using Streamlit and Plotly_*''')
     
@@ -64,7 +65,12 @@ if selected == "ABOUT":
             #### :green[**Plotly**]: Integrated Plotly, a versatile plotting library, to generate insightful visualizations from the dataset. Plotly's interactive plots,
             #### including geospatial plots and other data visualizations, provided users with a comprehensive understanding of the dataset's contents.''')
 
-#setup the detail for the option 'HOME'
+    st.title(':red[Developed By:] :blue[Yashvanth]')
+    
+      
+
+
+#setting the details for the option 'HOME'
 if selected =="HOME":
         col1,col2=st.columns(2)
         with col1:
@@ -78,7 +84,7 @@ if selected =="HOME":
                 Its offers comprehensive analytics including transaction volumes, consumer demographics, popular merchant categories,
                 geographic trends, transaction values, payment methods, and seasonal fluctuations.<h5>''',unsafe_allow_html=True)
         with col2:
-                st.markdown("![Alt Text](https://miro.medium.com/v2/resize:fit:736/1*E8Ys7gfVryzMjtpYy9Z6gw.gif)")
+                st.markdown("![Alt Text](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExY2Vvb2oyaHBqNHZzdm9ycG5lcDEyczk3dDZtcnplamdpbGJudG8xNiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/gSU4qpRY00OOe6v8I8/giphy-downsized-large.gif)")
 
         col1,col2=st.columns(2)
         with col1:
@@ -91,12 +97,10 @@ if selected =="HOME":
                         By examining trends, categorizing transactions,and identifying patterns of india.
                         <h4>User: <h5>User insights refer to analyzing customer demographics, engagement metrics, and feedback.
                         By understanding demographics, tracking engagement of user in India ''',unsafe_allow_html=True)
-                
-                st.subheader(':violet[This Project is Inspired From Phonepe pulse]')
-                st.link_button('Go to Phonepe Pulse','https://www.phonepe.com/pulse/')
+        
 
 
-#setup details for the option "Geo Visualization"
+#setting details for the option "Geo Visualization"
 if selected =="GEO VISUALIZATION":
         st.title(':violet[GEO VISUALIZATION]')
         
@@ -130,6 +134,7 @@ if selected =="GEO VISUALIZATION":
                                         mapbox_style="carto-positron",zoom=3.5,
                                         center={"lat": 21.7679, "lon": 78.8718},)
  
+                                
                                 fig.update_geos(fitbounds="locations", visible=False)
                                 fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
                                 fig.update_layout(height=600)
@@ -277,62 +282,116 @@ if selected =="GEO VISUALIZATION":
                                 st.plotly_chart(fig,use_container_width = True)
 
 
-
 #setting details for the option "District Wise Bar-Chart"
 if selected =="District Wise Bar-Chart":
         st.title(':violet[District Wise Bar-Chart]')
-       
-        Year = st.slider("**Year**", min_value=2018, max_value=2024)
-        Quater = st.slider("Quater", min_value=1, max_value=4)
-        st.markdown("## :violet[Select any State to explore More]")
-        selected_state = st.selectbox("",
-                             ('Andaman & Nicobar Islands','Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chandigarh','Chhattisgarh',
-                              'Dadra and Nagar Haveli and Daman and Diu','Delhi','Goa','Gujarat','Haryana','Himachal Pradesh','Jammu & Kashmir',
-                              'Jharkhand','Karnataka','Kerala','Ladakh','Lakshadweep','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram',
-                              'Nagaland','Odisha','Puducherry','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal'),index=30)
         
+        query_unique_States = "SELECT DISTINCT State FROM map_transaction order by State"   #To get Unique State Name
+        unique_States = pd.read_sql_query(query_unique_States, engine) 
+
+        selected_state = st.selectbox('Select State Name:', unique_States['State'])   
         
+        Type = st.radio('Category Selection',["**Transactions**","**Users**"], index = None)
+        st.write("You selected:", f"<span style='color:#F8CD47'>{Type}</span>", unsafe_allow_html=True)
         
-        # BAR CHART TOTAL TRANSACTIONS - DISTRICT WISE DATA
-        st.markdown("## :violet[TOTAL TRANSACTIONS - DISTRICT WISE]")
-        if Year == 2024 and Quater in [2,3,4]:
-                st.markdown("#### Sorry No Data to Display for 2024 Qtr 2,3,4")
-        
-        else:
-                mycursor.execute(f"select State, District,year,Quater, sum(Transaction_count) as Total_Transactions, sum(Transaction_amount) as Total_amount from map_transaction where year = {Year} and Quater = {Quater} and State = '{selected_state}' group by State, District,year,Quater order by state,district")
+        if Type=="**Transactions**":
+                year_and_Quater_wise = st.toggle('Year And Quater Wise')
+
+                if not year_and_Quater_wise:
+                        st.title(":violet[ TOTAL TRANSACTIONS DISTRICT WISE-Sum of all Year ]")
+
+                        mycursor.execute(f'''select State, District,year,Quater, sum(Transaction_count) as Total_Transactions, sum(Transaction_amount) as Total_amount 
+                                             from map_transaction 
+                                             where State = '{selected_state}'
+                                             group by State, District,year,Quater 
+                                             order by state,district''')
                 
-                df1 = pd.DataFrame(mycursor.fetchall(), columns=['State','District','Year','Quater',
-                                                                'Total_Transactions','Total_amount'])
-                fig = px.bar(df1,
-                        title=selected_state,
-                        x="District",
-                        y="Total_Transactions",
-                        orientation='v',
-                        color='Total_amount',
-                        color_continuous_scale=px.colors.sequential.Agsunset)
-                st.plotly_chart(fig,use_container_width=True) 
+                        df1 = pd.DataFrame(mycursor.fetchall(), columns=['State','District','Year','Quater',
+                                                                        'Total_Transactions','Total_amount'])
+                        fig = px.bar(df1,
+                                title= selected_state,
+                                x="District",
+                                y="Total_Transactions",
+                                orientation='v',
+                                color='Total_amount',
+                                color_continuous_scale=px.colors.sequential.Agsunset)
+                        st.plotly_chart(fig,use_container_width=True) 
 
 
-        # BAR CHART TOTAL USER - DISTRICT WISE DATA 
-        st.markdown("## :violet[TOTAL USER - DISTRICT WISE]")
-        if Year == 2024 and Quater in [2,3,4]:
-                st.markdown("#### Sorry No Data to Display for 2024 Qtr 2,3,4")
-        
-        else:
-        
-                mycursor.execute(f"select State,year,Quater,District,sum(Registered_Users) as Total_Users, sum(App_Opens) as Total_Appopens from map_user where year = {Year} and Quater = {Quater} and state = '{selected_state}' group by State, District,year,Quater order by state,district")
+                if year_and_Quater_wise:
+                        
+                        df_year=pd.read_sql_query('''SELECT DISTINCT year as 'Year' from map_transaction''',con=engine)
+                        Year = st.select_slider("Select Year",options=df_year['Year'].tolist())
+                        df_quater=pd.read_sql_query('''SELECT DISTINCT Quater as 'Quater' from map_transaction''',con=engine)
+                        Quater = st.select_slider("Select Quater",options=df_quater['Quater'].tolist())
+                        
+                        st.title(f":violet[TOTAL TRANSACTIONS DISTRICT WISE in {Year}-Q{Quater} ]")  
+
+                        mycursor.execute(f'''select State, District,year,Quater, sum(Transaction_count) as Total_Transactions, sum(Transaction_amount) as Total_amount from map_transaction 
+                                             where year = {Year} and Quater = {Quater} and State = '{selected_state}' 
+                                             group by State, District,year,Quater 
+                                             order by state,district''')
                 
-                df = pd.DataFrame(mycursor.fetchall(), columns=['State','year', 'quarter', 'District', 'Total_Users','Total_Appopens'])
-                df.Total_Users = df.Total_Users.astype(int)
+                        df1 = pd.DataFrame(mycursor.fetchall(), columns=['State','District','Year','Quater',
+                                                                        'Total_Transactions','Total_amount'])
+                        fig = px.bar(df1,
+                                title= selected_state,
+                                x="District",
+                                y="Total_Transactions",
+                                orientation='v',
+                                color='Total_amount',
+                                color_continuous_scale=px.colors.sequential.Agsunset)
+                        st.plotly_chart(fig,use_container_width=True) 
+
+        if Type=="**Users**":
+                year_and_Quater_wise = st.toggle('Year And Quater Wise')
+
+                if not year_and_Quater_wise:
+                        st.title(":violet[TOTAL USERS DISTRICT WISE-Sum of all Year ]")
+
+                        mycursor.execute(f'''select State,year,Quater,District,sum(Registered_Users) as Total_Users, sum(App_Opens) as Total_Appopens 
+                                             from map_user 
+                                             where State = '{selected_state}'
+                                             group by State, District,year,Quater 
+                                             order by state,district''')
                 
-                fig = px.bar(df,
-                        title=selected_state,
-                        x="District",
-                        y="Total_Users",
-                        orientation='v',
-                        color='Total_Users',
-                        color_continuous_scale=px.colors.sequential.Agsunset)
-                st.plotly_chart(fig,use_container_width=True)                      
+                        df = pd.DataFrame(mycursor.fetchall(), columns=['State','year', 'quarter', 'District', 'Total_Users','Total_Appopens'])
+                        df.Total_Users = df.Total_Users.astype(int)
+                        
+                        fig = px.bar(df,
+                                title=selected_state,
+                                x="District",
+                                y="Total_Users",
+                                orientation='v',
+                                color='Total_Users',
+                                color_continuous_scale=px.colors.sequential.Agsunset)
+                        st.plotly_chart(fig,use_container_width=True)
+
+                if year_and_Quater_wise:
+                        
+                        df_year=pd.read_sql_query('''SELECT DISTINCT year as 'Year' from map_user''',con=engine)
+                        Year = st.select_slider("Select Year",options=df_year['Year'].tolist())
+                        df_quater=pd.read_sql_query('''SELECT DISTINCT Quater as 'Quater' from map_user''',con=engine)
+                        Quater = st.select_slider("Select Quater",options=df_quater['Quater'].tolist())
+                        
+                        st.title(f":violet[TOTAL USERS DISTRICT WISE in {Year}-Q{Quater}]") 
+                        mycursor.execute(f'''select State,year,Quater,District,sum(Registered_Users) as Total_Users, sum(App_Opens) as Total_Appopens 
+                                             from map_user 
+                                             where year = {Year} and Quater = {Quater} and state = '{selected_state}' 
+                                             group by State, District,year,Quater 
+                                             order by state,district''')
+                                
+                        df = pd.DataFrame(mycursor.fetchall(), columns=['State','year', 'quarter', 'District', 'Total_Users','Total_Appopens'])
+                        df.Total_Users = df.Total_Users.astype(int)
+                        
+                        fig = px.bar(df,
+                                title=selected_state,
+                                x="District",
+                                y="Total_Users",
+                                orientation='v',
+                                color='Total_Users',
+                                color_continuous_scale=px.colors.sequential.Agsunset)
+                        st.plotly_chart(fig,use_container_width=True)                                          
 
 
 
@@ -344,7 +403,7 @@ if selected == "Top Charts":
     colum1,colum2= st.columns([1,1.5],gap="large")
     with colum1:
         Year = st.slider("**Year**", min_value=2018, max_value=2024)
-        Quater = st.slider("Quater", min_value=1, max_value=4)
+        Quater = st.slider("**Quater**", min_value=1, max_value=4)
     
     with colum2:
         st.info(
@@ -360,7 +419,7 @@ if selected == "Top Charts":
         
 
 
-# Top Charts - TRANSACTIONS    
+    #Top Charts - TRANSACTIONS    
     if Type == "Transactions":
         col1,col2,col3 = st.columns([1,1,1],gap="small")
         
@@ -374,7 +433,7 @@ if selected == "Top Charts":
                 df = pd.DataFrame(mycursor.fetchall(), columns=['State', 'Transactions_Count','Total_Amount'])
                 fig = px.pie(df, values='Total_Amount',
                                 names='State',
-                                title=(f"Top 10 Highest (Y= {Year} and Q= {Quater})"),
+                                title=(f"Top 10 Highest in {Year}-Q{Quater}"),
                                 color_discrete_sequence=px.colors.sequential.Agsunset,
                                 hover_data=['Transactions_Count'],
                                 labels={'Transactions_Count':'Transactions_Count'})
@@ -393,7 +452,7 @@ if selected == "Top Charts":
                 df = pd.DataFrame(mycursor.fetchall(), columns=['State', 'Transactions_Count','Total_Amount'])
                 df = df.sort_values(by='Transactions_Count', ascending=False)
                 fig = px.bar(df,
-                                title=(f"Top 10 Lowest (Y= {Year} and Q= {Quater})"),
+                                title=(f"Top 10 Lowest in {Year}-Q{Quater}"),
                                 x="Total_Amount",
                                 y="State",
                                 orientation='h',
@@ -413,7 +472,7 @@ if selected == "Top Charts":
 
                 fig = px.pie(df, values='Total_Amount',
                                 names='District',
-                                title=(f"Top 10 Highest (Y= {Year} and Q= {Quater})"),           
+                                title=(f"Top 10 Highest in {Year}-Q{Quater}"),           
                                 color_discrete_sequence=px.colors.sequential.Agsunset,
                                 hover_data=['Transactions_Count'],
                                 labels={'Transactions_Count':'Transactions_Count'})
@@ -431,7 +490,7 @@ if selected == "Top Charts":
                 df = pd.DataFrame(mycursor.fetchall(), columns=['District', 'Transactions_Count','Total_Amount'])
 
                 fig = px.bar(df,
-                                title=(f"Top 10 Lowest (Y= {Year} and Q= {Quater})"),
+                                title=(f"Top 10 Lowest in {Year}-Q{Quater}"),
                                 x="Total_Amount",
                                 y="District",
                                 orientation='h',
@@ -450,7 +509,7 @@ if selected == "Top Charts":
                 df = pd.DataFrame(mycursor.fetchall(), columns=['Pincode', 'Transactions_Count','Total_Amount'])
                 fig = px.pie(df, values='Total_Amount',
                                 names='Pincode',
-                                title=(f"Top 10 Highest (Y= {Year} and Q= {Quater})"),
+                                title=(f"Top 10 Highest in {Year}-Q{Quater}"),
                                 color_discrete_sequence=px.colors.sequential.Agsunset,
                                 hover_data=['Transactions_Count'],
                                 labels={'Transactions_Count':'Transactions_Count'})
@@ -469,7 +528,7 @@ if selected == "Top Charts":
                 
                 fig = px.pie(df, values='Total_Amount',
                                 names='Pincode',
-                                title=(f"Top 10 Lowest (Y= {Year} and Q= {Quater})"),
+                                title=(f"Top 10 Lowest in {Year}-Q{Quater}"),
                                 color_discrete_sequence=px.colors.sequential.Agsunset,
                                 hover_data=['Transactions_Count'],
                                 labels={'Transactions_Count':'Transactions_Count'})
@@ -487,7 +546,7 @@ if selected == "Top Charts":
                         df = pd.DataFrame(mycursor.fetchall(), columns=['Transaction_type', 'Total_Transactions','Total_amount'])
                         df = df.sort_values(by='Transaction_type', ascending=True)
                         fig = px.bar(df,
-                                title=(f"Transaction Types vs Total_Transactions (Y= {Year} and Q= {Quater})"),
+                                title=(f"Transaction Types vs Total_Transactions in {Year}-Q{Quater}"),
                                 x="Transaction_type",
                                 y="Total_Transactions",
                                 orientation='v',
@@ -496,7 +555,7 @@ if selected == "Top Charts":
                         st.plotly_chart(fig,use_container_width=False)    
 
 
-# Top Charts - USERS          
+    # Top Charts - USERS          
     if Type == "Users":
         col1,col2,col3 = st.columns([1,1,1],gap="small")
         
@@ -510,7 +569,7 @@ if selected == "Top Charts":
                         df = pd.DataFrame(mycursor.fetchall(), columns=['State', 'Total_Users','Total_Appopens'])
                         df = df.sort_values(by='Total_Users', ascending=True)
                         fig = px.bar(df,
-                                title=(f"Top 10 Highest (Y= {Year} and Q= {Quater})"),
+                                title=(f"Top 10 Highest in {Year}-Q{Quater}"),
                                 x="Total_Users",
                                 y="State",
                                 orientation='h',
@@ -529,7 +588,7 @@ if selected == "Top Charts":
                         df = pd.DataFrame(mycursor.fetchall(), columns=['State', 'Total_Users','Total_Appopens'])
                         df = df.sort_values(by='Total_Users', ascending=False)
                         fig = px.bar(df,
-                                title=(f"Top 10 Lowest (Y= {Year} and Q= {Quater})"),
+                                title=(f"Top 10 Lowest in {Year}-Q{Quater}"),
                                 x="Total_Users",
                                 y="State",
                                 orientation='h',
@@ -550,7 +609,7 @@ if selected == "Top Charts":
                 df.Total_Users = df.Total_Users.astype(float)
                 df = df.sort_values(by='Total_Users', ascending=True)
                 fig = px.bar(df,
-                                title=(f"Top 10 Highest (Y= {Year} and Q= {Quater})"),
+                                title=(f"Top 10 Highest in {Year}-Q{Quater}"),
                                 x="Total_Users",
                                 y="District",
                                 orientation='h',
@@ -569,14 +628,37 @@ if selected == "Top Charts":
                 df.Total_Users = df.Total_Users.astype(float)
                 df = df.sort_values(by='Total_Users', ascending=False)
                 fig = px.bar(df,
-                                title=(f"Top 10 Lowest (Y= {Year} and Q= {Quater})"),
+                                title=(f"Top 10 Lowest in {Year}-Q{Quater}"),
                                 x="Total_Users",
                                 y="District",
                                 orientation='h',
                                 color='Total_Users',
                                 color_continuous_scale=px.colors.sequential.Agsunset)
                 st.plotly_chart(fig,use_container_width=True)
+        
+        
+        # Bar-Chart for Top 10 mobile brands and its percentage based on the how many people use phonepe.
+        with col2:
+            st.markdown("### :violet[Mobile Brands]")
+            if Year in [2022] and Quater in [2,3,4]:
+                st.markdown("#### No Data to Display for 2022,2023,2024 Qtr 1,2,3,4")
+            elif Year in [2023,2024] and Quater in [1,2,3,4]:
+                st.markdown("#### No Data to Display for 2023,2024 Qtr 1,2,3,4")
+            
+            else:
+                mycursor.execute(f"select User_brand, sum(User_count) as Total_Count, avg(User_percentage)*100 as Avg_Percentage from agg_user where year = {Year} and quater = {Quater} group by User_brand order by Total_Count desc limit 10")
+                df = pd.DataFrame(mycursor.fetchall(), columns=['Brand', 'Total_Users','Avg_Percentage'])
+                df = df.sort_values(by='Total_Users', ascending=True)
+                fig = px.bar(df,
+                             title=(f"Top 10 mobile brands in {Year}-Q{Quater}"),
+                             x="Total_Users",
+                             y="Brand",
+                             orientation='h',
+                             color='Avg_Percentage',
+                             color_continuous_scale=px.colors.sequential.Agsunset)
+                st.plotly_chart(fig,use_container_width=True)       
                 
+        
         # Pie-Chart for Top 10 Highest Pincode based on Total phonepe users and their app opening frequency.
         with col3:
             st.markdown("### :violet[Pincode]")
@@ -587,7 +669,7 @@ if selected == "Top Charts":
                 df = pd.DataFrame(mycursor.fetchall(), columns=['Pincode', 'Total_Users'])
                 fig = px.pie(df, values='Total_Users',
                                 names='Pincode',
-                                title=(f"Top 10 Highest (Y= {Year} and Q= {Quater})"),
+                                title=(f"Top 10 Highest in {Year}-Q{Quater}"),
                                 color_discrete_sequence=px.colors.sequential.Agsunset,
                                 hover_data=['Total_Users'],
                                 labels={'Total_Users':'Total_Users'})
@@ -605,7 +687,7 @@ if selected == "Top Charts":
                 df = pd.DataFrame(mycursor.fetchall(), columns=['Pincode', 'Total_Users'])
                 fig = px.pie(df, values='Total_Users',
                                 names='Pincode',
-                                title=(f"Top 10 Lowest (Y= {Year} and Q= {Quater})"),
+                                title=(f"Top 10 Lowest in {Year}-Q{Quater}"),
                                 color_discrete_sequence=px.colors.sequential.Agsunset,
                                 hover_data=['Total_Users'],
                                 labels={'Total_Users':'Total_Users'})
@@ -613,21 +695,6 @@ if selected == "Top Charts":
                 fig.update_traces(textposition='inside', textinfo='percent+label')
                 st.plotly_chart(fig,use_container_width=True)
         
-        # Bar-Chart for Top 10 mobile brands and its percentage based on the how many people use phonepe.
-        with col2:
-            st.markdown("### :violet[Mobile Brands]")
-            if Year == 2024 and Quater in [2,3,4]:
-                st.markdown("#### No Data to Display for 2024 Qtr 2,3,4")
-            else:
-                mycursor.execute(f"select User_brand, sum(User_count) as Total_Count, avg(User_percentage)*100 as Avg_Percentage from agg_user where year = {Year} and quater = {Quater} group by User_brand order by Total_Count desc limit 10")
-                df = pd.DataFrame(mycursor.fetchall(), columns=['Brand', 'Total_Users','Avg_Percentage'])
-                df = df.sort_values(by='Total_Users', ascending=True)
-                fig = px.bar(df,
-                             title=(f"Top 10 mobile brands (Y= {Year} and Q= {Quater})"),
-                             x="Total_Users",
-                             y="Brand",
-                             orientation='h',
-                             color='Avg_Percentage',
-                             color_continuous_scale=px.colors.sequential.Agsunset)
-                st.plotly_chart(fig,use_container_width=True)
-        
+       
+
+
